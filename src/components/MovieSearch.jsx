@@ -1,37 +1,59 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import MovieResult from "./MovieResult";
+import { MdArrowCircleLeft, MdArrowCircleRight } from "react-icons/md";
+import ConfigIcon from "./ReactIconCofinguration";
 
 function MovieSearch() {
 	const [query, setQuery] = useState("");
+	const [timer, setTimer] = useState(0);
 	const [movies, setMovies] = useState([]);
-	let [page, setPage] = useState(1);
+	const [page, setPage] = useState(1);
 
-	useEffect(() => {
-		fetch(`https://omdbapi.com/?s=${query}&apikey=c9fe20e4&page=${page}`)
+	function debounce(func, delay) {
+		return function (...args) {
+			const context = this;
+			clearTimeout(timer);
+			setTimer(setTimeout(() => func.apply(context, args), delay));
+		};
+	}
+
+	const debouncedSearch = debounce((searchTerm) => {
+		fetch(`https://omdbapi.com/?s=${searchTerm}&apikey=c9fe20e4&page=${page}`)
 			.then((response) => response.json())
 			.then((data) => {
 				console.log(data);
 				return setMovies(data.Search || []);
 			});
-	}, [query, page]);
+	}, 3000);
+
+	function handleQueryChange(event) {
+		setQuery(event.target.value);
+		debouncedSearch(event.target.value);
+	}
 	const pageForward = () => {
-		console.log(page);
-		return setPage(page++);
+		return setPage(page + 1);
 	};
 	const pageBackwards = () => {
-		console.log(page);
 		if (page !== 1) {
-			return setPage(page--);
+			return setPage(page - 1);
 		}
 	};
 
 	return (
 		<div>
 			<div>
-				<button onClick={() => pageBackwards()} />
-				<button onClick={() => pageForward()} />
+				<button onClick={() => pageBackwards()}>
+					<ConfigIcon>
+						<MdArrowCircleLeft value={{ color: "green", size: "10em" }} />
+					</ConfigIcon>
+				</button>
+				<button onClick={() => pageForward()}>
+					<ConfigIcon>
+						<MdArrowCircleRight value={{ color: "green", size: "10em" }} />
+					</ConfigIcon>
+				</button>
 			</div>
-			<input type="text" value={query} onChange={(event) => setQuery(event.target.value)} />
+			<input type="text" value={query} onChange={(event) => handleQueryChange(event)} />
 			<ul>
 				{movies.map((movie) => (
 					<MovieResult key={movie.imdbID} movie={movie} />
