@@ -10,6 +10,7 @@ function MovieSearch() {
 	const [movies, setMovies] = useState([]);
 	const [page, setPage] = useState(1);
 	const [isLoading, setIsLoading] = useState(false);
+	const [hasError, setHasError] = useState(false);
 
 	function debounce(func, delay) {
 		return function (...args) {
@@ -21,11 +22,15 @@ function MovieSearch() {
 
 	const debouncedSearch = debounce((searchTerm) => {
 		setIsLoading(true);
+		setHasError(false);
 		fetch(`https://omdbapi.com/?s=${searchTerm}&apikey=c9fe20e4&page=${page}`)
 			.then((response) => response.json())
 			.then((data) => {
-				console.log(data);
-				return setMovies(data.Search || []);
+				if (data.Response === true) {
+					return setMovies(data.Search || []);
+				}
+				console.log(data.Response);
+				setHasError(true);
 			})
 			.finally(() => {
 				setIsLoading(false);
@@ -71,6 +76,8 @@ function MovieSearch() {
 				>
 					<PacmanLoader loading={isLoading} size={300} color={"#000"} />
 				</div>
+			) : hasError ? (
+				<h2> Filmes não encontrados </h2>
 			) : (
 				<ul>
 					{movies.map((movie) => (
