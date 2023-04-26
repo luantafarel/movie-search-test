@@ -2,12 +2,14 @@ import React, { useState } from "react";
 import MovieResult from "./MovieResult";
 import { MdArrowCircleLeft, MdArrowCircleRight } from "react-icons/md";
 import ConfigIcon from "./ReactIconCofinguration";
+import { PacmanLoader } from "react-spinners";
 
 function MovieSearch() {
 	const [query, setQuery] = useState("");
 	const [timer, setTimer] = useState(0);
 	const [movies, setMovies] = useState([]);
 	const [page, setPage] = useState(1);
+	const [isLoading, setIsLoading] = useState(false);
 
 	function debounce(func, delay) {
 		return function (...args) {
@@ -18,11 +20,15 @@ function MovieSearch() {
 	}
 
 	const debouncedSearch = debounce((searchTerm) => {
+		setIsLoading(true);
 		fetch(`https://omdbapi.com/?s=${searchTerm}&apikey=c9fe20e4&page=${page}`)
 			.then((response) => response.json())
 			.then((data) => {
 				console.log(data);
 				return setMovies(data.Search || []);
+			})
+			.finally(() => {
+				setIsLoading(false);
 			});
 	}, 3000);
 
@@ -54,11 +60,24 @@ function MovieSearch() {
 				</button>
 			</div>
 			<input type="text" value={query} onChange={(event) => handleQueryChange(event)} />
-			<ul>
-				{movies.map((movie) => (
-					<MovieResult key={movie.imdbID} movie={movie} />
-				))}
-			</ul>
+			{isLoading ? (
+				<div
+					style={{
+						"display": "flex",
+						"justify-content": "center",
+						"align-items": "center",
+						"height": "300"
+					}}
+				>
+					<PacmanLoader loading={isLoading} size={300} color={"#000"} />
+				</div>
+			) : (
+				<ul>
+					{movies.map((movie) => (
+						<MovieResult key={movie.imdbID} movie={movie} />
+					))}
+				</ul>
+			)}
 		</div>
 	);
 }
